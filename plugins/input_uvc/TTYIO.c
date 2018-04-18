@@ -62,29 +62,16 @@ TTY_INFO *TTY_Ready(TTY_DEV_ID eID)
 		return NULL; 
 	} 
 	
-/*
-#ifdef DM3730
-	if(eID == TTY_DEV_0)
-		ptty->nGPIOCtrlNum = DM3730_GPIO_RS485_1_EN;
-	else if(eID == TTY_DEV_1)
-		ptty->nGPIOCtrlNum = DM3730_GPIO_RS485_2_EN;
-#else	//DM6446
-	if(eID == TTY_DEV_1)
-		ptty->nGPIOCtrlNum = DM644X_GPIO_RS485TR;
-	else if(eID == TTY_DEV_2)
-		ptty->nGPIOCtrlNum = DM644X_GPIO_ALM_OUT0;	//��Ӳ���ϱ�����Ϊ�ڶ�485�ڵĿ���
 
-#endif*/
-	/* ȡ�ò��ұ���ԭ�������� */
 	tcgetattr(ptty->fd,&ptty->otm); 
 	return ptty; 
 } 
 
-/* �������豸��Դ */
+
 
 int TTY_Clean(TTY_INFO *ptty) 
 { 
-	/* �رմ򿪵Ĵ����豸 */
+
 
 	if(ptty->fd>0) 
 	{
@@ -92,27 +79,17 @@ int TTY_Clean(TTY_INFO *ptty)
 		close(ptty->fd); 
 		ptty->fd = -1; 
 	}
-	/*if(ptty->fdIOCtrl > 0)
-	{
-		close(ptty->fdIOCtrl);
-		ptty->fdIOCtrl = -1;
-	}*/
+
 	free(ptty); 
 	ptty = NULL; 
 
 	return 0; 
 } 
 
-/* ���ô�������λ��ֹͣλ��У��λ �Ͳ�����*/
-/* ptty ��������(TTY_INFO *),�Ѿ���ʼ���Ĵ����豸��Ϣ�ṹָ�� */
-/* databits ��������(int), ����λ,ȡֵΪ7����8 */
-/* parity ��������(int),Ч������ ȡֵΪN,E,O,,S */
-/* stopbits ��������(int),ֹͣλ,ȡֵΪ1����2 */
-/* return ����ֵ����(int),����ִ�гɹ�������ֵ�����򷵻ش������ֵ */
 
 int TTY_SetParity(TTY_INFO *ptty,int databits,int parity,int stopbits,int speed) 
 { 
-	/* ȡ�ô������� */
+
 	if( tcgetattr(ptty->fd,&ptty->ntm) != 0) 
 	{ 
 		_DBG("SetupSerial [%s]\n",ptty->name); 
@@ -124,7 +101,7 @@ int TTY_SetParity(TTY_INFO *ptty,int databits,int parity,int stopbits,int speed)
 	ptty->ntm.c_iflag = IGNPAR; 
 	ptty->ntm.c_oflag = 0; 
 
-	/* ���ô��ڵĸ��ֲ��� */
+
 
 	ptty->ntm.c_cflag &= ~CSIZE; 
 	switch (databits)  /*��������λ��*/

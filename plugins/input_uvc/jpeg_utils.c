@@ -142,7 +142,8 @@ int compress_yuv_to_jpeg(struct vdIn *vd, unsigned char *buffer, int size, int q
     unsigned char *line_buffer, *yuyv;
     int z;
     static int written;
-
+    double totel_g_sum;
+    double totel_g_num;
     line_buffer = calloc(vd->width * 3, 1);
     yuyv = vd->framebuffer;
 
@@ -163,11 +164,11 @@ int compress_yuv_to_jpeg(struct vdIn *vd, unsigned char *buffer, int size, int q
 
     z = 0;
     DBG("height:%d,wdith:%d\n",vd->height,vd->height);
-    while(cinfo.next_scanline < vd->height)
+    while(cinfo.next_scanline < vd->height)   //240
     {
         int x;
         unsigned char *ptr = line_buffer;
-        for(x = 0; x < vd->width; x++)
+        for(x = 0; x < vd->width; x++)    //320
         {
             int r, g, b;
             int y, u, v;
@@ -211,6 +212,32 @@ int compress_yuv_to_jpeg(struct vdIn *vd, unsigned char *buffer, int size, int q
             g = (y - (88 * u) - (183 * v)) >> 8;
             b = (y + (454 * u)) >> 8;
 
+            float temp1;
+            temp1 = (float)g/(float)(r+g+b);
+            // temp2 = (float)r/(float)(r+g+b);
+            // temp3 = (float)b/(float)(r+g+b);
+            // if((x == 160) && (cinfo.next_scanline == 120))
+            // {
+            //    // r = 250;
+            //    // g = 250;
+            //    // b = 250;
+            //    printf("r=%d,g = %d,b = %d, temp = %f\n",r,g,b,temp );
+            // }
+            if((temp1 > 0.4)&&(r+g+b >180))
+            {
+              totel_g_sum += x;
+              totel_g_num ++;
+              r = g = b = 250;
+            }
+            // if( (x < 170) && (x > 150) && \
+            // (cinfo.next_scanline < 130) && (cinfo.next_scanline > 110)  )
+            // {
+            //     r = g = b = 200;
+            // }
+
+
+
+
             *(ptr++) = (r > 255) ? 255 : ((r < 0) ? 0 : r);
             *(ptr++) = (g > 255) ? 255 : ((g < 0) ? 0 : g);
             *(ptr++) = (b > 255) ? 255 : ((b < 0) ? 0 : b);
@@ -225,6 +252,8 @@ int compress_yuv_to_jpeg(struct vdIn *vd, unsigned char *buffer, int size, int q
         row_pointer[0] = line_buffer;
         jpeg_write_scanlines(&cinfo, row_pointer, 1);
     }
+
+    printf("offset = %d\n",(int)(totel_g_sum/totel_g_num - 160));
 
     jpeg_finish_compress(&cinfo);
     jpeg_destroy_compress(&cinfo);
