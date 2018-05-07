@@ -16,24 +16,24 @@ TTY_DEV_ID;
 
 typedef struct TTY_INFO TTY_INFO;
 
-TTY_INFO *TTY_Ready(TTY_DEV_ID eID); 
+TTY_INFO *TTY_Ready(TTY_DEV_ID eID);
 
-int TTY_SetParity(TTY_INFO *ptty,int databits,int parity,int stopbits,int speed); 
+int TTY_SetParity(TTY_INFO *ptty,int databits,int parity,int stopbits,int speed);
 
-int TTY_Clean(TTY_INFO *ptty); 
+int TTY_Clean(TTY_INFO *ptty);
 
-int TTY_Sendn(TTY_INFO *ptty,char *pbuf,int size); 
+int TTY_Sendn(TTY_INFO *ptty,char *pbuf,int size);
 
 int TTY_SendnNB(TTY_INFO *ptty,char *pbuf,int size);
 
-int TTY_Recvn(TTY_INFO *ptty,char *pbuf,int size); 
+int TTY_Recvn(TTY_INFO *ptty,char *pbuf,int size);
 
 int TTY_RecvNB(TTY_INFO *pTTY, char *pBuf, int bufSize);
 
-int TTY_Lock(TTY_INFO *ptty); 
+int TTY_Lock(TTY_INFO *ptty);
 
 int TTY_Unlock(TTY_INFO *ptty);
-
+extern TTY_INFO *info;
 typedef enum
 {
 	TTY_SEND,

@@ -26,7 +26,7 @@
 #include <stdio.h>
 #include <jpeglib.h>
 #include <stdlib.h>
-
+#include "TTYIO.h"
 #include "v4l2uvc.h"
 
 #define OUTPUT_BUF_SIZE  4096
@@ -144,9 +144,12 @@ int compress_yuv_to_jpeg(struct vdIn *vd, unsigned char *buffer, int size, int q
     static int written;
     double totel_g_sum;
     double totel_g_num;
+    unsigned char send_buf[6];
+    int offset;
     line_buffer = calloc(vd->width * 3, 1);
     yuyv = vd->framebuffer;
-
+    send_buf[0] = 0x7F;
+    send_buf[5] = 0xF7;
     cinfo.err = jpeg_std_error(&jerr);
     jpeg_create_compress(&cinfo);
     /* jpeg_stdio_dest (&cinfo, file); */
@@ -212,30 +215,15 @@ int compress_yuv_to_jpeg(struct vdIn *vd, unsigned char *buffer, int size, int q
             g = (y - (88 * u) - (183 * v)) >> 8;
             b = (y + (454 * u)) >> 8;
 
-            float temp1;
-            temp1 = (float)g/(float)(r+g+b);
-            // temp2 = (float)r/(float)(r+g+b);
-            // temp3 = (float)b/(float)(r+g+b);
-            // if((x == 160) && (cinfo.next_scanline == 120))
-            // {
-            //    // r = 250;
-            //    // g = 250;
-            //    // b = 250;
-            //    printf("r=%d,g = %d,b = %d, temp = %f\n",r,g,b,temp );
-            // }
-            if((temp1 > 0.4)&&(r+g+b >180))
+            float color_value;
+            color_value = g/(r+g+b);
+			
+            if((color_value > 0.4)&&(r+g+b >180))
             {
               totel_g_sum += x;
               totel_g_num ++;
               r = g = b = 250;
             }
-            // if( (x < 170) && (x > 150) && \
-            // (cinfo.next_scanline < 130) && (cinfo.next_scanline > 110)  )
-            // {
-            //     r = g = b = 200;
-            // }
-
-
 
 
             *(ptr++) = (r > 255) ? 255 : ((r < 0) ? 0 : r);
@@ -252,8 +240,14 @@ int compress_yuv_to_jpeg(struct vdIn *vd, unsigned char *buffer, int size, int q
         row_pointer[0] = line_buffer;
         jpeg_write_scanlines(&cinfo, row_pointer, 1);
     }
-
-    printf("offset = %d\n",(int)(totel_g_sum/totel_g_num - 160));
+	printf("total_g_num = %3f\n",totel_g_num);
+    offset = (int)(totel_g_sum/totel_g_num - 160);
+    send_buf[1] = offset >> 8;
+    send_buf[2] = offset & 0xFF;
+    send_buf[3] = (short int)(totel_g_num) >> 8;
+    send_buf[4] = (short int)(totel_g_num) & 0xFF;
+    
+    TTY_Sendn(info, (char *)send_buf, 6);
 
     jpeg_finish_compress(&cinfo);
     jpeg_destroy_compress(&cinfo);
